@@ -18,6 +18,7 @@ from .torch import (
     DiscreteEnsembleQFunctionForwarder,
     GlobalPositionEncoding,
     NormalPolicy,
+    NSFFunction,
     Parameter,
     PositionEncoding,
     SimplePositionEncoding,
@@ -35,6 +36,7 @@ __all__ = [
     "create_deterministic_residual_policy",
     "create_categorical_policy",
     "create_normal_policy",
+    "create_nsf_function",
     "create_vae_encoder",
     "create_vae_decoder",
     "create_value_function",
@@ -279,6 +281,20 @@ def create_value_function(
     if enable_ddp:
         value_func = wrap_model_by_ddp(value_func)
     return value_func
+
+
+def create_nsf_function(
+    observation_shape: Shape,
+    encoder_factory,
+    device: str,
+    enable_ddp: bool,
+) -> NSFFunction:
+    encoder = encoder_factory.create(observation_shape=observation_shape)
+    nsf_func = NSFFunction(encoder)
+    nsf_func.to(device)
+    if enable_ddp:
+        nsf_func = wrap_model_by_ddp(nsf_func)
+    return nsf_func
 
 
 def create_parameter(

@@ -11,6 +11,7 @@ from .torch import (
     PixelEncoderWithAction,
     VectorEncoder,
     VectorEncoderWithAction,
+    NSFEncoder,
 )
 from .torch.encoders import SimBaEncoder, SimBaEncoderWithAction
 from .utility import create_activation
@@ -263,6 +264,33 @@ class DefaultEncoderFactory(EncoderFactory):
     @staticmethod
     def get_type() -> str:
         return "default"
+
+
+@dataclass()
+class NSFEncoderFactory:
+    """NSF encoder factory class.
+
+    This encoder factory returns an NSF encoder based on observation shape.
+
+    Args:
+        observation_shape (int): observation shape.
+        hidden_units (list): List of hidden unit sizes.
+        transforms (int): Number of transformations.
+    """
+
+    hidden_units: list[int] = field(default_factory=lambda: [256, 256])
+    transforms: int = field(default_factory=lambda: 5)
+
+    def create(self, observation_shape: int) -> VectorEncoder:
+        return NSFEncoder(
+            observation_shape=observation_shape,
+            hidden_units=self.hidden_units,
+            transforms=self.transforms,
+        )
+
+    @staticmethod
+    def get_type() -> str:
+        return "nsf"
 
 
 @dataclass()

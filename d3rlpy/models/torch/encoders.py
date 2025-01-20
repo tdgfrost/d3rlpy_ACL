@@ -5,6 +5,8 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+import zuko
+
 from ...itertools import last_flag
 from ...types import Shape, TorchObservation
 
@@ -15,6 +17,7 @@ __all__ = [
     "PixelEncoderWithAction",
     "VectorEncoder",
     "VectorEncoderWithAction",
+    "NSFEncoder",
     "SimBaEncoder",
     "SimBaEncoderWithAction",
     "compute_output_size",
@@ -232,6 +235,29 @@ class VectorEncoder(Encoder):
     def forward(self, x: TorchObservation) -> torch.Tensor:
         assert isinstance(x, torch.Tensor)
         return self._layers(x)
+
+
+class NSFEncoder(Encoder):
+    _layers: nn.Module
+
+    def __init__(
+        self,
+        observation_shape: int,
+        transforms: int,
+        hidden_units: Optional[Sequence[int]]
+    ):
+        super().__init__()
+
+        if hidden_units is None:
+            hidden_units = (256, 256)
+
+        self._layers = zuko.flows.NSF(features=observation_shape,
+                                      transforms=transforms,
+                                      hidden_features=tuple(hidden_units))
+
+    def forward(self, x: TorchObservation) -> torch.Tensor:
+        assert isinstance(x, torch.Tensor)
+        return self._layers().log_prob(x).view(-1, 1)
 
 
 class VectorEncoderWithAction(EncoderWithAction):
